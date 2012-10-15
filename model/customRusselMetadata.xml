@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Definition of new Model -->
+
+<!-- The important part here is the name - Note: the use of the my: namespace
+     which is defined further on in the document -->
+<model name="russel:russelMetadata" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+   <!-- Optional meta-data about the model -->   
+   <description>Russel Metadata</description>
+   <author></author>
+   <version>1.0</version>
+
+   <!-- Imports are required to allow references to definitions in other models -->   
+   <imports>
+   	  <!-- Import Alfresco Dictionary Definitions -->
+      <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+      <!-- Import Alfresco Content Domain Model Definitions -->
+      <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+   </imports>
+
+   <!-- Introduction of new namespaces defined by this model -->
+   <!-- NOTE: The following namespace my.new.model should be changed to reflect your own namespace -->
+   <namespaces>
+      <namespace uri="russel.russelMetadata" prefix="russel"/>
+   </namespaces>
+   
+   
+   <types>
+   <!--
+       Definition of new Content Type: Standard Operating Procedure
+      <type name="my:sop">
+         <title>Standard Operating Procedure</title>
+         <parent>cm:content</parent>
+         <properties>
+            <property name="my:publishedDate">
+               <type>d:datetime</type>
+            </property>
+            <property name="my:authorisedBy">
+               <type>d:text</type>
+            </property>
+         </properties>
+         <associations>
+            <association name="my:signOff">
+               <source>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </source>
+               <target>
+                  <class>cm:content</class>
+                  <mandatory>false</mandatory>
+                  <many>false</many>
+               </target>
+            </association>
+            <child-association name="my:processSteps">
+               <source>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </source>
+               <target>
+                  <class>cm:content</class>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </target>
+			</child-association>            
+         </associations>
+      </type>
+      --> 
+    </types>
+    
+     
+    <aspects>
+      
+      <!-- Definition of new Content Aspect: Image Classification -->
+      <aspect name="russel:metaTest">
+         <title>metaTest</title>
+         <properties>
+         <!-- 
+            <property name="russel:t1">
+               <type>d:int</type>
+            </property>
+            <property name="russel:t2">
+               <type>d:int</type>
+            </property>
+            <property name="russel:r1">
+               <type>d:int</type>
+            </property> <default>{value}</default> 
+
+            -->
+            
+            <property name="russel:class">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:objective">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:activity">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:env">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:coverage">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:agerange">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:language">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:duration">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:techreqs">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:dist">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:level">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:publisher">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+            <property name="russel:partof">
+           		<type>d:text</type>
+           		<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+           	</property>
+            <property name="russel:requires">
+            	<type>d:text</type>
+            	<index enabled="true">
+                 	<atomic>true</atomic>
+                 	<stored>true</stored>
+                 	<tokenised>true</tokenised>
+              	</index>
+            </property>
+         </properties>
+      </aspect>
+      
+   </aspects>
+   
+</model>

@@ -1,0 +1,12 @@
+<webscript>
+	<shortname>Folder ID</shortname>
+	<description>
+		Get the folder ID for a given path
+	</description>
+	<url>/folderId/{path}</url>
+	<format default="json">argument</format>
+	<authentication>guest</authentication>
+	<family>RUSSEL Tools</family>
+	<transaction>required</transaction>
+	<lifecycle>public_api</lifecycle>
+</webscript>

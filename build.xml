@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+ 
+<project name="Sample Module" default="package-amp" basedir=".">
+ 
+	<property name="project.dir" value="."/>
+	<property file="${project.dir}/build.properties"/>
+	<property file="${project.dir}/module.properties"/>
+	
+	<property name="build.number" value="${build.major.number}.${build.minor.number}"/>
+	<property name="build.dir" value="${project.dir}/build"/>
+	<property name="config.dir" value="${project.dir}/config"/>
+	<property name="jar.file" value="${build.dir}/lib/${module.id}-${build.number}.jar"/>
+	<property name="amp.file" value="${build.dir}/dist/${module.id}-${build.number}.amp"/>
+ 
+	<target name="setModuleVersion">
+		<propertyfile file="module.properties">
+			<entry key="module.version" value="${build.number}" />
+		</propertyfile>
+	</target>
+	
+	<target name="minorVersion">
+	    <propertyfile file="build.properties">
+	    	<entry key="build.minor.number" type="int" operation="+" value="1" pattern="0000"/>
+	    </propertyfile>
+	</target>
+	
+    <target name="mkdirs">
+        <mkdir dir="${build.dir}/dist" />
+        <mkdir dir="${build.dir}/lib" />
+    	<mkdir dir="${build.dir}/classes" />
+    </target>
+ 
+    <path id="class.path">
+        <dirset dir="${build.dir}" />
+    	<fileset dir="${project.dir}/lib" includes="**/*.jar" />
+        <fileset dir="${alfresco.sdk.dir}/lib/server" includes="**/*.jar" />
+    </path>
+ 
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+ 
+    <target name="compile" depends="clean,mkdirs">      
+        <javac classpathref="class.path" debug="${debug}" srcdir="${project.dir}/source/java" 
+        	destdir="${build.dir}/classes" target="1.5" encoding="UTF-8"/>
+    	<copy todir="${build.dir}/classes">
+    		<fileset dir="${project.dir}/source/java" defaultexcludes="false">
+    			<exclude name="**/*.java"/>
+    			<exclude name="**/.svn/**"/>
+    			<exclude name="**/CVS/**"/>
+    		</fileset>
+    	</copy>
+    </target>
+ 
+    <target name="package-jar" depends="compile">
+        <jar destfile="${jar.file}" encoding="UTF-8">
+            <fileset dir="${build.dir}/classes" excludes="**/custom*,**/*Test*" defaultexcludes="false" />
+        </jar>
+    </target>
+ 
+    <target name="package-amp" depends="minorVersion, setModuleVersion, package-jar" description="Package the Module" >
+        <zip destfile="${amp.file}" encoding="UTF-8">
+            <fileset dir="${project.dir}/build" includes="lib/*.jar" />
+            <fileset dir="${project.dir}" includes="config/**/*.*" excludes="**/module.properties" />
+            <fileset dir="${project.dir}">
+            	<include name="module.properties"/>
+            	<include name="file-mapping.properties" />
+            	<include name="WEB-INF/**/*" />
+            	<include name="lib/**/*" />
+            	<include name="webscripts/**/*" />
+            	<include name="model/**/*" />
+            	<exclude name="WEB-INF/alfresco.tld"/>
+            	<exclude name="WEB-INF/repo.tld"/>
+            </fileset>
+        	<zipfileset dir="source/web" prefix="web"/>
+        </zip>
+    </target>
+	
+	<target name="majorVersion">
+	    <propertyfile file="build.properties">
+	    	<entry key="build.major.number" type="int" operation="+" value="1" pattern="0"/>
+	    </propertyfile>
+	</target>
+</project>
