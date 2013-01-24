@@ -1,0 +1,15 @@
+<webscript>
+  <shortname>ZIP Import</shortname> 
+  <description> import ZIP entries return a list of node ids and metadata</description>
+  <url>/russeltools/zipimport?store_type={store_type}&amp;store_id={store_id}&amp;node_id={node_id}</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>required</transaction>
+  <cache>
+    <never>false</never>
+    <public>false</public>
+    <mustrevalidate/>
+  </cache>
+  <lifecycle>public_api</lifecycle>
+</webscript>

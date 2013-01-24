@@ -1,9 +1,9 @@
 <webscript>
-	<shortname>Folder ID</shortname>
+	<shortname>Add aspect to node</shortname>
 	<description>
-		Get the folder ID for a given path
+		Add aspect to a given node reference
 	</description>
-	<url>/folderId/{path}</url>
+	<url>/addAspect/</url>
 	<format default="json">argument</format>
 	<authentication>user</authentication>
 	<family>RUSSEL Tools</family>

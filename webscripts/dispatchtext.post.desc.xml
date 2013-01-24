@@ -1,0 +1,15 @@
+<webscript>
+  <shortname>URL Dispatch</shortname> 
+  <description>Passes along get/post and query parameters to target URL and returns response</description>
+  <url>/russeltools/dispatchText?targetURL={targetURL}&amp;httpType={httpType}</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>required</transaction>
+  <cache>
+    <never>false</never>
+    <public>false</public>
+    <mustrevalidate/>
+  </cache>
+  <lifecycle>public_api</lifecycle>
+</webscript>
