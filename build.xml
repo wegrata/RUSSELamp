@@ -3,6 +3,7 @@
 <project name="Sample Module" default="package-amp" basedir=".">
  
 	<property name="project.dir" value="."/>
+	<property name="alfresco.sdk.dir" value="${project.dir}/alfresco/sdk"/>
 	<property file="${project.dir}/build.properties"/>
 	<property file="${project.dir}/module.properties"/>
 	
