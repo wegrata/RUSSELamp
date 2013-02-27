@@ -9,8 +9,39 @@
   		<property name="serviceRegistry" ref="ServiceRegistry" /> 
    </bean>
    
+   <bean id="webscript.org.alfresco.russeltools.iecompatibility.post" 
+    	 class="org.alfresco.module.russeltools.IECompatibility"
+    	 parent="webscript">
+    	<property name="repository" ref="repositoryHelper" />
+  		<property name="serviceRegistry" ref="ServiceRegistry" /> 
+   </bean>
+   
+   <bean id="webscript.org.alfresco.russeltools.zipexport.post" 
+    	 class="org.alfresco.module.russeltools.ZIPExport"
+    	 parent="webscript">
+    	<property name="repository" ref="repositoryHelper" />
+  		<property name="serviceRegistry" ref="ServiceRegistry" /> 
+   </bean>
+   
+   <bean id="webscript.org.alfresco.russeltools.solrsearch.get" 
+    	 class="org.alfresco.module.russeltools.SolrSearch"
+    	 parent="webscript">
+    	<property name="repository" ref="repositoryHelper" />
+  		<property name="serviceRegistry" ref="ServiceRegistry" /> 
+   </bean>
+   
    <bean id="webscript.org.alfresco.russeltools.dispatchtext.post" 
     	 class="org.alfresco.module.russeltools.DispatchText"
+    	 parent="webscript">
+   </bean>
+   
+   <bean id="webscript.org.alfresco.russeltools.dispatch3dr.post" 
+    	 class="org.alfresco.module.russeltools.Dispatch3DR"
+    	 parent="webscript">
+   </bean>
+   
+   <bean id="webscript.org.alfresco.russeltools.flrImport.get" 
+    	 class="org.alfresco.module.russeltools.FLRImport"
     	 parent="webscript">
     	<property name="repository" ref="repositoryHelper" />
   		<property name="serviceRegistry" ref="ServiceRegistry" /> 

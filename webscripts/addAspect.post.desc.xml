@@ -1,9 +1,9 @@
 <webscript>
 	<shortname>Add aspect to node</shortname>
 	<description>
-		Add aspect to a given node reference
+		Add aspect to a given node reference json object with key aspect and value array of aspects
 	</description>
-	<url>/addAspect/</url>
+	<url>/russeltools/addAspect/</url>
 	<format default="json">argument</format>
 	<authentication>user</authentication>
 	<family>RUSSEL Tools</family>

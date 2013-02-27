@@ -3,7 +3,6 @@
 <project name="Sample Module" default="package-amp" basedir=".">
  
 	<property name="project.dir" value="."/>
-	<property name="alfresco.sdk.dir" value="${project.dir}/alfresco/sdk"/>
 	<property file="${project.dir}/build.properties"/>
 	<property file="${project.dir}/module.properties"/>
 	
@@ -68,6 +67,7 @@
             	<include name="file-mapping.properties" />
             	<include name="WEB-INF/**/*" />
             	<include name="lib/**/*" />
+            	<include name="repository/*" />
             	<include name="webscripts/**/*" />
             	<include name="model/**/*" />
             	<exclude name="WEB-INF/alfresco.tld"/>

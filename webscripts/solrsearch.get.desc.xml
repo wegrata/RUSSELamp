@@ -1,0 +1,10 @@
+<webscript>
+  <shortname>SOLR Search</shortname> 
+  <description>Modified/Tuned SOLR search default and operator. json object with terms(user input), sort(cm:modified|false), rowLimit(int), page(int)</description>
+  <url>/russeltools/solrsearch?store_type={store_type}&amp;store_id={store_id}</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>none</transaction>
+  <lifecycle>public_api</lifecycle>
+</webscript>

@@ -3,7 +3,7 @@
 	<description>
 		Get the folder ID for a given path
 	</description>
-	<url>/folderId/{path}</url>
+	<url>/russeltools/folderId/{path}</url>
 	<format default="json">argument</format>
 	<authentication>user</authentication>
 	<family>RUSSEL Tools</family>

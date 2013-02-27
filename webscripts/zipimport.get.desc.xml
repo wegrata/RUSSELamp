@@ -6,10 +6,5 @@
   <format default="json">argument</format>
   <family>RUSSEL Tools</family>
   <transaction>required</transaction>
-  <cache>
-    <never>false</never>
-    <public>false</public>
-    <mustrevalidate/>
-  </cache>
   <lifecycle>public_api</lifecycle>
 </webscript>

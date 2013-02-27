@@ -5,11 +5,6 @@
   <authentication>user</authentication>
   <format default="json">argument</format>
   <family>RUSSEL Tools</family>
-  <transaction>required</transaction>
-  <cache>
-    <never>false</never>
-    <public>false</public>
-    <mustrevalidate/>
-  </cache>
+  <transaction>none</transaction>
   <lifecycle>public_api</lifecycle>
 </webscript>

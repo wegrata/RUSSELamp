@@ -12,20 +12,7 @@ import org.springframework.extensions.webscripts.AbstractWebScript;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
 
-public class DispatchText extends AbstractWebScript {
-	private ServiceRegistry registry;
-	private Repository repository;	
-	
-	// for Spring injection 
-	public void setRepository(Repository repository) {
-		this.repository = repository;
-	}
-
-	// for Spring injection 
-	public void setServiceRegistry(ServiceRegistry registry) {
-		this.registry = registry;
-	}
-	
+public class DispatchText extends AbstractWebScript {	
 	@Override 
 	public void execute(WebScriptRequest incomingAlfresco, WebScriptResponse outgoingAlfresco) throws IOException {
 
@@ -38,8 +25,8 @@ public class DispatchText extends AbstractWebScript {
 		connection.setRequestProperty("Accept-Charset", "UTF-8");
 		if (httpType.equalsIgnoreCase("POST")) {
 			connection.setDoOutput(true);
-			OutputStream outgoingPost = connection.getOutputStream();
 			connection.setRequestProperty("Content-Type","application/x-www-form-urlencoded;charset=UTF-8");
+			OutputStream outgoingPost = connection.getOutputStream();
 			int bodySize = body.available();
 			for (int bodyIndex=0;bodyIndex<bodySize;bodyIndex++)
 				outgoingPost.write((byte)body.read());

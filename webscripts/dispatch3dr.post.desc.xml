@@ -1,0 +1,10 @@
+<webscript>
+  <shortname>3DR Dispatch</shortname> 
+  <description>Does action against 3DR repository and returns response. actions upload(no params), metadata(id), search(terms)</description>
+  <url>/russeltools/dispatch3dr?action={action}&amp;id={id}&amp;terms={terms}</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>none</transaction>
+  <lifecycle>public_api</lifecycle>
+</webscript>

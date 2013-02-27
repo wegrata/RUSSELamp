@@ -1,0 +1,14 @@
+<webscript>
+  <shortname>ZIP Export</shortname> 
+  <description>Export entries in a ZIP package.
+  			   The Array contains json objects that can have an id and location or a location + filename and filecontent.
+  			   Example {"toZip":[{"id":"store_type://store_id/node_id","location":"folder/"},
+  			   					 {"filename":"imsmanifest.xml", "filecontent": "text the goes inside file"},
+  			   					 ...]}</description>
+  <url>/russeltools/zipexport?zipName={zipName}</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>none</transaction>
+  <lifecycle>public_api</lifecycle>
+</webscript>
