@@ -1,3 +1,22 @@
+/*
+Copyright (c) 2012-2013, Eduworks Corporation. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+02110-1301 USA
+*/
+
 package org.alfresco.module.russeltools;
 
 import java.io.File;
@@ -26,6 +45,7 @@ import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.namespace.QName;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.extensions.webscripts.AbstractWebScript;
@@ -60,15 +80,7 @@ public class ZIPImport extends AbstractWebScript {
 			NodeRef node = getNodeRef(sType, sId, nId);
 			
 			Vector<String> acc = importZIPAssets(node);
-			String assets = "";
-			
-			for (int x=0;x<acc.size();x++)
-				assets += "," + acc.get(x);
-			if (assets!="")
-				assets = "[" + assets.substring(1) + "]"; 
-			
- 			obj.put("importedIDs", assets);
-			obj.put("numberOfEntries", acc.size());
+ 			obj.put("importedIDs", acc);
 			
 	    	outgoing.getWriter().write(obj.toString());
 	    	outgoing.getWriter().flush();
@@ -214,7 +226,8 @@ public class ZIPImport extends AbstractWebScript {
 				ext.equalsIgnoreCase("rtf")||ext.equalsIgnoreCase("tex")||ext.equalsIgnoreCase("txt")||ext.equalsIgnoreCase("wpd")||ext.equalsIgnoreCase("wps")||
 				ext.equalsIgnoreCase("3g2")||ext.equalsIgnoreCase("3gp")||ext.equalsIgnoreCase("asf")||ext.equalsIgnoreCase("asx")||ext.equalsIgnoreCase("avi")||
 				ext.equalsIgnoreCase("flv")||ext.equalsIgnoreCase("mov")||ext.equalsIgnoreCase("mp4")||ext.equalsIgnoreCase("mpg")||ext.equalsIgnoreCase("rm")||
-				ext.equalsIgnoreCase("srt")||ext.equalsIgnoreCase("swf")||ext.equalsIgnoreCase("vob")||ext.equalsIgnoreCase("rpf")||ext.equalsIgnoreCase("rlk"))
+				ext.equalsIgnoreCase("srt")||ext.equalsIgnoreCase("swf")||ext.equalsIgnoreCase("vob")||ext.equalsIgnoreCase("rpf")||ext.equalsIgnoreCase("rlk")||
+				ext.equalsIgnoreCase("rlr"))
 				keepAsset = true;
 			else if ((fileKSize>10)&&((ext.equalsIgnoreCase("aif")||ext.equalsIgnoreCase("iff")||ext.equalsIgnoreCase("m3u")||ext.equalsIgnoreCase("m4a")||
 					 ext.equalsIgnoreCase("mid")||ext.equalsIgnoreCase("mp3")||ext.equalsIgnoreCase("mpa")||ext.equalsIgnoreCase("ra")||ext.equalsIgnoreCase("swa")||

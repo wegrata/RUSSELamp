@@ -1,10 +1,31 @@
+/*
+Copyright (c) 2012-2013, Eduworks Corporation. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+02110-1301 USA
+*/
 package org.alfresco.module.russeltools;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.model.Repository;
 import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.dictionary.AspectDefinition;
+import org.alfresco.service.cmr.dictionary.PropertyDefinition;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
 import org.alfresco.service.cmr.repository.StoreRef;
@@ -72,7 +93,7 @@ public class SolrSearch extends AbstractWebScript {
 			try {
 				results = searchHandle.query(querySettings);
 			} catch (Exception e) {
-				querySettings.setQuery(querySettings.getQuery().replaceAll("[\\\\+\\-\\!\\(\\)\\:\\^\\]\\{\\&\\}\\~\\*\\?\\|\\]\\\"\\.]", "\\\\$0"));
+				querySettings.setQuery(querySettings.getQuery().replaceAll("[\\\\+\\-\\!\\(\\)\\:\\^\\]\\{\\&\\}\\~\\*\\?\\|\\]\\\"\\.\\<\\>]", "\\\\$0"));
 				results = searchHandle.query(querySettings);
 			}
 			for (int resultIndex=0;resultIndex<results.length();resultIndex++) {
@@ -84,6 +105,7 @@ public class SolrSearch extends AbstractWebScript {
 					jsonRecord.put("description", nodeService.getProperties(nodeHandle).get(QName.createQName(NamespaceService.CONTENT_MODEL_1_0_URI, "description")));
 					jsonRecord.put("rating", registry.getRatingService().getAverageRating(nodeHandle, RUSSEL_RATING_SCHEME));
 					jsonRecord.put("commentsCount", nodeService.getProperties(nodeHandle).get(QName.createQName(NamespaceService.FORUMS_MODEL_1_0_URI, "commentCount")));
+					jsonRecord.put("fouo", nodeService.getProperties(nodeHandle).get(QName.createQName("russel.russelMetadata", "level")));
 				} catch (JSONException e) {
 					//bad record
 				}

@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2012-2013, Eduworks Corporation. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+02110-1301 USA
+*/
 package org.alfresco.module.russeltools;
 
 import java.io.File;
@@ -6,15 +24,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import javax.transaction.UserTransaction;
 
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.model.Repository;
 import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.model.FileInfo;
 import org.alfresco.service.cmr.repository.ContentReader;
 import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.NodeRef;
+import org.alfresco.service.namespace.NamespaceService;
+import org.alfresco.service.namespace.QName;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +49,7 @@ import org.springframework.extensions.webscripts.AbstractWebScript;
 import org.springframework.extensions.webscripts.WebScriptException;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
+import org.springframework.extensions.webscripts.servlet.FormData;
 
 
 public class ZIPExport extends AbstractWebScript {	
@@ -44,28 +72,73 @@ public class ZIPExport extends AbstractWebScript {
 			throws IOException {
 		try {
 			String zipName = incomingAlfresco.getParameter("zipName");
-			String postJSON = "";
+			JSONObject postJSON;
 			InputStream postStream = incomingAlfresco.getContent().getInputStream();
-			int postCharacter;
-			while ((postCharacter=postStream.read())!=-1) {
-				postJSON += (char)postCharacter;
-			}
+
+			postJSON = new JSONObject(IOUtils.toString(postStream));
 			postStream.close();
+			
 			File fileHandle = File.createTempFile("russel", "russel");
 			ZipOutputStream zipStream = new ZipOutputStream(new FileOutputStream(fileHandle));
-			createZipEntries(new JSONObject(postJSON), zipStream);
+			createZipEntries(postJSON, zipStream);
 			zipStream.close();
 			
-			byte[] outputBytes = new byte[(int)fileHandle.length()];
+	        try {
+	        	File projectWrapper;
+	        	JSONObject rawZipProject = new JSONObject(postJSON.get("projectToZip").toString());
+		    	if (getJSONKey(rawZipProject, "projectName")!="") {
+		    		projectWrapper = File.createTempFile("russel", "russel");
+					ZipOutputStream zipProject = new ZipOutputStream(new FileOutputStream(projectWrapper));
+					zipProject.putNextEntry(new ZipEntry(zipName.substring(0, zipName.lastIndexOf(".")) + "SCORM.zip"));
+					zipProject.write(IOUtils.toByteArray(new FileInputStream(fileHandle)));
+					zipProject.putNextEntry(new ZipEntry(getJSONKey(rawZipProject, "projectName")));
+					String nodeId = getJSONKey(rawZipProject, "projectNodeId");
+					InputStream content = registry.getFileFolderService().getReader(getNodeRef(nodeId)).getContentInputStream();
+					zipProject.write(IOUtils.toByteArray(content));
+					zipProject.flush();
+					zipProject.close();
+					fileHandle = projectWrapper;
+		    	}
+	        } catch (JSONException e) {}
+	        
 			FileInputStream fis = new FileInputStream(fileHandle);
-			outgoingAlfresco.setContentType("application/zip; charset=UTF-8");
-			outgoingAlfresco.setContentEncoding("UTF-8");
-			outgoingAlfresco.setHeader("Content-Disposition", "attachment; filename=\"" + zipName + "\"");
-			OutputStream outStream = outgoingAlfresco.getOutputStream();
-			fis.read(outputBytes);
-			outStream.write(outputBytes);
+			
+			int i = 0;
+			boolean created = false;
+			UserTransaction userT = null;
+			FileInfo fileEntry = null;
+			String filename = "";
+			while (!created) {
+				try {
+					filename = zipName;
+					userT = registry.getTransactionService().getNonPropagatingUserTransaction();
+					if (i!=0&&filename.lastIndexOf(".")!=-1) 
+						filename = filename.substring(0, filename.lastIndexOf(".")) + "-" + i + filename.substring(filename.lastIndexOf("."));
+					else if (i!=0)
+						filename = filename + "-" + i;
+					userT.begin();
+					fileEntry = registry.getFileFolderService().create(repository.getUserHome(repository.getPerson()),
+	    															   filename,
+																	   ContentModel.TYPE_CONTENT);
+					registry.getFileFolderService().getWriter(fileEntry.getNodeRef()).putContent(fis);
+					userT.commit();
+	    			created = true;
+	        	} catch (Exception e) {
+	        		try {
+						if (userT!=null)
+							userT.rollback();
+					} catch (Exception e1) {
+						
+					}
+	        		if (i<100000)
+	    				i++;
+	    			else
+	    				new WebScriptException("Failed to create item -100000 bounded ids - " + filename);
+				}
+			}
+			
 			fis.close();
-			outStream.close();
+			outgoingAlfresco.getWriter().write("{\"id\":\"" + fileEntry.getNodeRef().getId() + "\"}");
 	     } catch(JSONException e) {
 	    	throw new WebScriptException("Unable to serialize JSON");
 	     }
@@ -98,47 +171,47 @@ public class ZIPExport extends AbstractWebScript {
 	}
 	
 	private void createZipEntries(JSONObject post, ZipOutputStream zipContainer) {
-        byte[] tempBytes;
         JSONArray rawZipEntries;
         try {
-        	rawZipEntries = post.getJSONArray("toZip");
+        	rawZipEntries = post.getJSONArray("mediaToZip");
         } catch (JSONException e) {
-        	throw new WebScriptException("malformed json: needs a \"toZip\" key");
+        	throw new WebScriptException("malformed json: needs a \"mediaToZip\" key");
         }
         ContentService contentService = registry.getContentService();
         if (rawZipEntries.length()==0)
         	throw new WebScriptException("nothing to zip");
-        try {
-	    	for (int entryIndex=0; entryIndex<rawZipEntries.length(); entryIndex++) {
-	    		JSONObject entry;
+
+    	for (int entryIndex=0; entryIndex<rawZipEntries.length(); entryIndex++) {
+    		JSONObject entry;
+    		try {
+	        	entry = new JSONObject(rawZipEntries.get(entryIndex).toString());
+    		} catch (JSONException e) {
+    			throw new WebScriptException("Out of bound in JSON array");
+    		}
+	    	if (getJSONKey(entry, "id")!="") {
+	    		NodeRef nodeHandle = null;
 	    		try {
-		        	entry = new JSONObject(rawZipEntries.get(entryIndex));
-	    		} catch (JSONException e) {
-	    			throw new WebScriptException("Out of bound in JSON array");
-	    		}
-	    		
-	        	if (getJSONKey(entry, "id")!="") {
-	        		NodeRef nodeHandle = getNodeRef(getJSONKey(entry, "id"));
+	        		nodeHandle = getNodeRef(getJSONKey(entry, "id"));
 	        		if (nodeHandle!=null) {
 	        			ContentReader reader = contentService.getReader(nodeHandle, ContentModel.PROP_CONTENT);
 	        			InputStream contentStream = reader.getContentInputStream();
-	        			tempBytes = new byte[(int)reader.getSize()];
-	        			contentStream.read(tempBytes);
 	        			zipContainer.putNextEntry(new ZipEntry(getJSONKey(entry, "location") + registry.getNodeService().getProperty(nodeHandle, ContentModel.PROP_NAME).toString()));		        			
-	        			zipContainer.write(tempBytes);
+	        			zipContainer.write(IOUtils.toByteArray(contentStream));
 	        			zipContainer.closeEntry();
 	        			contentStream.close();
 	        		}
-	        	} else {
-	        		String filename = getJSONKey(entry, "filename");
-	        		String filecontents = getJSONKey(entry, "filecontent");
-	        		zipContainer.putNextEntry(new ZipEntry(filename));
-	        		zipContainer.write(filecontents.getBytes());
-        			zipContainer.closeEntry();
-	        	}
+	            } catch (IOException e) {
+	            	//throw new WebScriptException("Could not write node " + ((nodeHandle!=null)?nodeHandle.getId():"null") + " to zip file"); 
+	            }
+	    	} else {
+	    		try {
+	        		zipContainer.putNextEntry(new ZipEntry(getJSONKey(entry, "filename")));
+	        		zipContainer.write(getJSONKey(entry, "filecontent").getBytes());
+	    			zipContainer.closeEntry();
+	    	 	} catch (IOException e) {
+	            	//throw new WebScriptException("Could not write post data " + getJSONKey(entry, "filename") + ", " + getJSONKey(entry, "filecontent") + " to zip file"); 
+	            }
 	    	}
-        } catch (IOException e) {
-        	throw new WebScriptException("Could not write to zip file"); 
-        }
+    	}
 	}
 }

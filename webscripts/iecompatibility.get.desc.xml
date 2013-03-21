@@ -1,0 +1,10 @@
+<webscript>
+  <shortname>IE Compatibility Actions</shortname> 
+  <description>Contains creation and update of node contents</description>
+  <url>/russeltools/iecompatibility</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>required</transaction>
+  <lifecycle>public_api</lifecycle>
+</webscript>

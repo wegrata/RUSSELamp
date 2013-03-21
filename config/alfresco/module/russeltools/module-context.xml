@@ -1,4 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<!-- 
+/*
+Copyright (c) 2012-2013, Eduworks Corporation. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+02110-1301 USA
+*/
+ -->
 <!DOCTYPE beans PUBLIC '-//SPRING//DTD BEAN//EN' 'http://www.springframework.org/dtd/spring-beans.dtd'>
 
 <beans>
@@ -10,6 +30,13 @@
    </bean>
    
    <bean id="webscript.org.alfresco.russeltools.iecompatibility.post" 
+    	 class="org.alfresco.module.russeltools.IECompatibility"
+    	 parent="webscript">
+    	<property name="repository" ref="repositoryHelper" />
+  		<property name="serviceRegistry" ref="ServiceRegistry" /> 
+   </bean>
+   
+   <bean id="webscript.org.alfresco.russeltools.iecompatibility.get" 
     	 class="org.alfresco.module.russeltools.IECompatibility"
     	 parent="webscript">
     	<property name="repository" ref="repositoryHelper" />
@@ -30,8 +57,8 @@
   		<property name="serviceRegistry" ref="ServiceRegistry" /> 
    </bean>
    
-   <bean id="webscript.org.alfresco.russeltools.dispatchtext.post" 
-    	 class="org.alfresco.module.russeltools.DispatchText"
+   <bean id="webscript.org.alfresco.russeltools.dispatchflr.post" 
+    	 class="org.alfresco.module.russeltools.DispatchFLR"
     	 parent="webscript">
    </bean>
    
@@ -40,8 +67,8 @@
     	 parent="webscript">
    </bean>
    
-   <bean id="webscript.org.alfresco.russeltools.flrImport.get" 
-    	 class="org.alfresco.module.russeltools.FLRImport"
+   <bean id="webscript.org.alfresco.russeltools.importflr.get" 
+    	 class="org.alfresco.module.russeltools.ImportFLR"
     	 parent="webscript">
     	<property name="repository" ref="repositoryHelper" />
   		<property name="serviceRegistry" ref="ServiceRegistry" /> 

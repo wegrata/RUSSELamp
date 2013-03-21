@@ -1,0 +1,10 @@
+<webscript>
+  <shortname>FLR Dispatch</shortname> 
+  <description>Passes along publish parameters to target FLR and returns response</description>
+  <url>/russeltools/dispatchflr</url>
+  <authentication>user</authentication>
+  <format default="json">argument</format>
+  <family>RUSSEL Tools</family>
+  <transaction>none</transaction>
+  <lifecycle>public_api</lifecycle>
+</webscript>

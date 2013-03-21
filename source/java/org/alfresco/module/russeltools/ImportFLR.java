@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2012-2013, Eduworks Corporation. All rights reserved.
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 3 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+02110-1301 USA
+*/
 package org.alfresco.module.russeltools;
 
 import java.io.File;
@@ -43,11 +61,22 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 
-public class FLRImport extends AbstractWebScript {	
+public class ImportFLR extends AbstractWebScript {	
+	
+	// ***************** BEGIN CUSTOMIZATION AREA ******************************************************************//
+	// By default, a RUSSEL installation uses the Russel.Project@adlnet.gov account on FLR Sandbox.  You can change your
+	// installation to use a different account by editing these parameters.
+	//
+		// The following string constant should be replaced with the desired FLR obtain URL.
+		private static final String ADL_FLR_OBTAIN_URL = "http://sandbox.learningregistry.org/obtain";
+	//
+	// ***************** END CUSTOMIZATION AREA ********************************************************************//
+
+	
+	// ***************** EDIT BELOW AT YOUR OWN RISK ***************************************************************//
 	private ServiceRegistry registry;
 	private Repository repository;	
 	private static final String FLR_RUSSEL_MIME_TYPE = "russel/flr";
-	private static final String FLR_INVALID_DOC_ID = "Invalid URL";
 	private static final String FLR_JSON_PARSE_FAIL = "JSON parse failure";
 	private static final String FLR_XML_PARSE_FAIL = "XML parse failure";
 	private static final String FLR_OUTPUT_FAIL = "Output stream failure";
@@ -57,15 +86,17 @@ public class FLRImport extends AbstractWebScript {
 	private static final String FLR_ADD_NODE_FAIL = "Node failure";
 	private static final String PAYLOAD_SCHEMA_NSDL_DC = "nsdl dc";
 	private static final String PAYLOAD_SCHEMA_UNKNOWN = "unknown schema";
-	private static final String NODE = "node";
+	private static final String PAYLOAD_SCHEMA_NOT_FOUND = "missing schema";
+	
 	private JSONArray badFiles;
-	private JSONObject doc = null;
+	private JSONArray partialFiles;
 	private JSONObject docOut = null;
 	private JSONArray outDocs = null;
 	private JSONObject outObj = null;
 	private DocumentBuilderFactory dbFactory;
 	private DocumentBuilder dBuilder;
-	private String curDocID = "";
+	private String curDocURL = "";
+	private String flrId = "";
 	private String identifier = "";
 	private String title = "";
 	private String description = "";
@@ -86,8 +117,9 @@ public class FLRImport extends AbstractWebScript {
 		this.registry = registry;
 	}
 	
-	private void initMetadata(String init) {
+	private void initMetadata0(String init) {
 		identifier = init;
+		flrId = init;
 		title = init;
 		description = init;
 		creator = init;
@@ -104,7 +136,7 @@ public class FLRImport extends AbstractWebScript {
 		
 		try {
 			// Extract webscript parameters
-			String targetURL = getTargetURL(incoming);
+			String targetURL = ADL_FLR_OBTAIN_URL;
 						
 			// Establish connection with the targetURL using httpType
 			URLConnection connection = new URL(targetURL).openConnection();
@@ -124,25 +156,26 @@ public class FLRImport extends AbstractWebScript {
 			outObj = new JSONObject();		
 			outDocs = new JSONArray();
 			badFiles  = new JSONArray();
+			partialFiles  = new JSONArray();
 			JSONArray docs = getDocArray(incomingGetPacket);
 			
 			for (int i=0; i<docs.length(); i++) {
 				
 				String status = null;
 				JSONObject doc = ((JSONObject) docs.get(i)); 
-				curDocID = getDocID(doc);
+				curDocURL = getDocURL(doc);
 				
-				if ((curDocID != null) && (curDocID != "")) {
+				if ((curDocURL != null) && (curDocURL != "")) {
 					
 					status = pullMetadata(doc);
 					if (status == FLR_METADATA_FAIL) {
-						badFiles.put("FLR_METADATA_FAIL-"+curDocID);
-						title = curDocID;
+						badFiles.put("FLR_METADATA_FAIL-"+curDocURL);
+						title = curDocURL;
 					}
 					
 					status = addFLRNode(doc);
 					if (status == FLR_ADD_NODE_FAIL) {
-						badFiles.put("FLR_ADD_NODE_FAIL-"+curDocID);
+						badFiles.put("FLR_ADD_NODE_FAIL-"+curDocURL);
 					}						
 					outDocs.put(docOut);
 				} // validated doc
@@ -167,7 +200,7 @@ public class FLRImport extends AbstractWebScript {
 		JSONObject rec = null;
 		docOut = new JSONObject();
 		
-		initMetadata("");
+		initMetadata0("");
 		JSONArray recs = getDocRecordsArray(doc);
 		if (recs.length() >= 1) {
 			try {
@@ -178,31 +211,32 @@ public class FLRImport extends AbstractWebScript {
 			}
 			
 			if (rec != null) {
+				flrId = getDocID(rec);
+				//if ((flrId == "") || (flrId == null)) flrId = currDocId;
+				keys = getKeys(rec);
+				pubs = getPublisher(rec);
 				schema = getPayloadSchema(rec);
 				if (schema == PAYLOAD_SCHEMA_UNKNOWN) {
-					badFiles.put("PAYLOAD_SCHEMA_UNKNOWN-"+curDocID);
-					title = curDocID;
+					title = curDocURL;
+					description = "For more information about this FLR item, refer to the preserved original metadata of this node.";
+				}
+				else if (schema == PAYLOAD_SCHEMA_NOT_FOUND) {
+					title = curDocURL;
 					description = "For more information about this FLR item, refer to the preserved original metadata of this node.";
 				}
 				else if (schema == PAYLOAD_SCHEMA_NSDL_DC) {
 					status = extractNsdlDc(rec);
 				}
-				keys = getKeys(rec);
-				pubs = getPublisher(rec);
+
 				try {
-					docOut.put("FoundDoc", curDocID);
+					docOut.put("FoundDoc", curDocURL);
 					docOut.put("FoundDocRecs", recs.length());
 					docOut.put("Schema", schema);
+					docOut.put("flrID", flrId);
 					docOut.put("Identifier", identifier);
 					docOut.put("Title", title);
-					//		docOut.put("Description", description); 
-					//		docOut.put("Creator", creator);
-					//		docOut.put("Language", language);
-					//		docOut.put("Date", date);
-					//		docOut.put("Access", access);
 					docOut.put("Keys", keys);
-					docOut.put("Publisher", pubs);
-					//		outDocs.put(docOut);						
+					docOut.put("Publisher", pubs);						
 				} catch (JSONException e) {
 					status = FLR_OUTPUT_FAIL;
 				}
@@ -246,7 +280,7 @@ public class FLRImport extends AbstractWebScript {
 		} catch (IOException e1) {
 			status = FLR_ADD_NODE_FAIL;
 //			buildResponse();
-			new WebScriptException("Couldn't create temp file for FLR document "+curDocID);
+			new WebScriptException("Couldn't create temp file for FLR document "+curDocURL);
 		}
         try {
 	        OutputStream tempFLRfileOStream = new FileOutputStream(tempFLRfile);
@@ -299,7 +333,8 @@ public class FLRImport extends AbstractWebScript {
     			else {
     	    		status = FLR_ADD_NODE_FAIL;
 //    				buildResponse();
-    				new WebScriptException("Failed to create item -100000 bounded ids - " + curDocID);
+					badFiles.put("FLR_ADD_NODE_FAIL-"+curDocURL);
+    				//new WebScriptException("FLR_ADD_NODE_FAIL: Failed to create item -100000 bounded ids - " + curDocURL);
     			}
 			}
 		} // end while
@@ -323,7 +358,8 @@ public class FLRImport extends AbstractWebScript {
 //        nodeService.addAspect(curDoc.getNodeRef(), tagsAspect, tagProps);	
         Map<QName,Serializable> russelProps = new HashMap<QName,Serializable>();	
         russelProps.put(QName.createQName("russel.russelMetadata", "language"), language);
-        russelProps.put(QName.createQName("russel.russelMetadata", "FLRtag"), curDocID);			        
+        russelProps.put(QName.createQName("russel.russelMetadata", "FLRtag"), curDocURL);	
+        russelProps.put(QName.createQName("russel.russelMetadata", "FLRid"), flrId);	
         russelProps.put(QName.createQName("russel.russelMetadata", "publisher"), pubs);	
         nodeService.addAspect(curDoc.getNodeRef(), russelAspect, russelProps);
         Map<QName,Serializable> aspectProps = new HashMap<QName,Serializable>();		
@@ -334,7 +370,9 @@ public class FLRImport extends AbstractWebScript {
 			cw.putContent(tempFLRfile);
     	} catch (ContentIOException e) {
     		status = FLR_ADD_NODE_FAIL;
-			new WebScriptException("Failed saving payload to node on - " + curDocID);
+			badFiles.put("FLR_ADD_NODE_FAIL-Failed saving payload to node on"+curDocURL);
+			//new WebScriptException("Failed saving payload to node on - " + curDocURL);
+			
 		}
 		return status;
 	}
@@ -343,8 +381,10 @@ public class FLRImport extends AbstractWebScript {
 		try {
 			outObj.put("docCount", outDocs.length());
 			outObj.put("badCount", badFiles.length());
+			outObj.put("partialCount", partialFiles.length());
 			outObj.put("docs", outDocs);
 			outObj.put("bad", badFiles);
+			outObj.put("partial", partialFiles);
 			String outString = outObj.toString();
 	    	outgoing.getWriter().write(outString);
 			outgoing.getWriter().flush();
@@ -360,7 +400,7 @@ public class FLRImport extends AbstractWebScript {
 
 		String targetURL = req.getParameter("targetURL");
 		if (targetURL == null) {
-			throw new WebScriptException("Invalid targetURL.");
+			throw new WebScriptException("Invalid targetURL.");			
 		}
 		return targetURL;
 
@@ -382,32 +422,47 @@ public class FLRImport extends AbstractWebScript {
 	}
 
 	protected String getKeys(JSONObject obj) {
-		String keys;
+		String keys = "[]";
 		try {
 			keys = obj.getString("keys");
 		} catch (JSONException e) {
-			//buildResponse();
-			throw new WebScriptException("Error retrieving document keys from FLR JSON for "+curDocID);
+			//throw new WebScriptException("Error retrieving document keys from FLR JSON for "+curDocURL);
+			partialFiles.put("FLR_MISSING_KEYS-"+curDocURL);
 		}
 		return keys;
 	}
 	
-	protected String getDocID(JSONObject obj) {
-		String Id;
+	protected String getDocURL(JSONObject obj) {
+		String url = "";
 		try {
-			Id = obj.getString("doc_ID");
-		} catch (JSONException e) {
-//			buildResponse();
-			throw new WebScriptException("Error retrieving document ID from FLR JSON.");
+			url = obj.getString("resource_locator");
+		} catch (JSONException e1) {
+			//throw new WebScriptException("Error retrieving document URL from FLR JSON.");
+			try {
+				url = obj.getString("doc_ID");
+			} catch (JSONException e2) {
+				//throw new WebScriptException("Error retrieving document URL from FLR JSON.");
+			}
 		}
+
 		//validate Id
 //		UrlValidator urlValidator = new UrlValidator(UrlValidator.ALLOW_LOCAL_URLS);  // Options aren't compiling
 		UrlValidator urlValidator = new UrlValidator();
-		if (!urlValidator.isValid(Id)) {
-			badFiles.put("FLR_INVALID_DOC_ID-"+Id);
-			// Rather than throw an exception, for now we will just log the bad Id and skip it during the import
-//				throw new WebScriptException(FLR_INVALID_DOC_ID+": "+Id);
-			Id = null;			
+		if (!urlValidator.isValid(url)) {
+			badFiles.put("FLR_INVALID_DOC_URL-"+url);
+			//throw new WebScriptException(FLR_INVALID_DOC_URL+": "+url);
+			url = null;			
+		} 
+		return url;
+	}
+
+	protected String getDocID(JSONObject obj) {
+		String Id = "";
+		try {
+			Id = obj.getString("doc_ID");
+		} catch (JSONException e) {
+			partialFiles.put("FLR_MISSING_DOC_ID-"+curDocURL);
+			//throw new WebScriptException("Error retrieving document ID from FLR JSON.");
 		}
 		return Id;
 	}
@@ -419,7 +474,7 @@ public class FLRImport extends AbstractWebScript {
 		try {
 			schemas = obj.getJSONArray("payload_schema");
 		} catch (JSONException e) {
-			badFiles.put("BAD PAYLOAD_SCHEMA-"+curDocID);
+			partialFiles.put("PAYLOAD_SCHEMA_NOT_FOUND-"+curDocURL);
 //			throw new WebScriptException("Error retrieving payload schema from FLR JSON for "+curDocID);
 		}
 		if (schemas == null) {
@@ -430,7 +485,6 @@ public class FLRImport extends AbstractWebScript {
 			for (int i=0; i<schemas.length(); i++)  {
 				try {
 					format = (String) schemas.get(i);
-
 				} catch (JSONException e) {
 //					throw new WebScriptException("Error extracting format from payload_schema-");
 				}
@@ -442,6 +496,7 @@ public class FLRImport extends AbstractWebScript {
 			}
 			if (!supported) {
 				format = PAYLOAD_SCHEMA_UNKNOWN;
+				partialFiles.put("PAYLOAD_SCHEMA_UNKNOWN-"+curDocURL);
 			}			
 		}
 		return format;
@@ -463,7 +518,8 @@ public class FLRImport extends AbstractWebScript {
 				submitter = temp.getString("submitter");
 			}
 		} catch (JSONException e) {
-			//throw new WebScriptException("Error retrieving document TOS from FLR JSON for "+curDocID+" obj="+temp);
+			partialFiles.put("PAYLOAD_TOS_NOT_FOUND-"+curDocURL);
+			//throw new WebScriptException("Error retrieving document TOS from FLR JSON for "+curDocURL+" obj="+temp);
 		}
 		if (submitter!=null && subattr!=null) attribution = submitter+", "+ subattr; 
 		if (submitter==null && subattr!=null) attribution = subattr; 
@@ -473,15 +529,17 @@ public class FLRImport extends AbstractWebScript {
 	
 	protected JSONArray getDocRecordsArray(JSONObject obj) {
 
-		JSONArray recs;
+		JSONArray recs = null;
 		try {
 			recs = obj.getJSONArray("document");
 		} catch (JSONException e) {
 			//buildResponse();
-			throw new WebScriptException("Error retrieving document records array from FLR JSON for "+curDocID);
+			badFiles.put("PAYLOAD_DOCREC_NOT_FOUND-"+curDocURL);
+			//throw new WebScriptException("Error retrieving document records array from FLR JSON for "+curDocURL);
 		}
 		if (recs == null) {
-			throw new WebScriptException("No FLR records found for document: "+curDocID);
+			badFiles.put("PAYLOAD_DOCREC_NOT_FOUND-"+curDocURL);
+			//throw new WebScriptException("No FLR records found for document: "+curDocURL);
 		}
 		return recs;
 
@@ -497,11 +555,9 @@ public class FLRImport extends AbstractWebScript {
 			tempXML = obj.getString("resource_data");
 		} catch (JSONException e) {
 			XMLdoc = null;
-			throw new WebScriptException("Error retrieving XML string from FLR JSON for "+curDocID);
-		}
-		if (tempXML == null) {
-			XMLdoc = null;
-			throw new WebScriptException("Error retrieving XML string from FLR JSON for "+curDocID);
+			partialFiles.put("PAYLOAD_METADATA_NOT_FOUND-"+curDocURL);
+			return null;
+			//throw new WebScriptException("Error retrieving XML string from FLR JSON for "+curDocURL);
 		}
 		
 		dbf = DocumentBuilderFactory.newInstance();
@@ -509,19 +565,25 @@ public class FLRImport extends AbstractWebScript {
 			db = dbf.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
 			XMLdoc = null;
-			throw new WebScriptException("Error building XML from FLR JSON for "+curDocID);
-		}
+			partialFiles.put("PAYLOAD_METADATA_NOT_PARSED-"+curDocURL);
+			//throw new WebScriptException("Error building XML from FLR JSON for "+curDocURL);
+			return null;
+			}
 	    InputSource is = new InputSource(new StringReader(tempXML));
 
 		try {
 			XMLdoc = db.parse(is);
 		} catch (IOException e) {
 			XMLdoc = null;
-			throw new WebScriptException("IO Exception: Error parsing XML from FLR JSON for "+curDocID);
-		} catch (SAXException e) {
+			partialFiles.put("PAYLOAD_METADATA_NOT_PARSED-"+curDocURL);
+			//throw new WebScriptException("IO Exception: Error parsing XML from FLR JSON for "+curDocURL);
+			return null;
+			} catch (SAXException e) {
 			XMLdoc = null;
-			throw new WebScriptException("SAX Exception: Error parsing XML from FLR JSON for "+curDocID);
-		}
+			partialFiles.put("PAYLOAD_METADATA_NOT_PARSED-"+curDocURL);
+			//throw new WebScriptException("SAX Exception: Error parsing XML from FLR JSON for "+curDocURL);
+			return null;
+			}
 		return XMLdoc;
 	}
 
@@ -539,18 +601,5 @@ public class FLRImport extends AbstractWebScript {
 	    return buf.toString();
 	}
 
-//	protected NodeRef getNodeRef(String sType, String sId, String nId) {
-//		// look up the child
-//		NodeRef nodeRef = null;
-//		try {
-//			nodeRef = repository.findNodeRef(NODE, new String[]{sType, sId, nId});
-//		} catch (Exception ex) {
-//			throw new WebScriptException("Error unable to locate path " + sType + "://" + sId + "/" + nId);
-//		}
-//		if (nodeRef == null) {
-//			throw new WebScriptException("Object doesn't exist " + sType + "://" + sId + "/" + nId);
-//		}
-//		return nodeRef; 
-//	}
 	
 }
