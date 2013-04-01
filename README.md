@@ -1,3 +1,12 @@
+RUSSEL Interface:
+
+       RUSSEL - https://github.com/adlnet/RUSSEL
+       RUSSELgwt - https://github.com/adlnet/RUSSELgwt
+
+RUSSEL Alfresco Backend:
+
+       RUSSELamp - https://github.com/adlnet/RUSSELamp
+
 GNU LESSER GENERAL PUBLIC LICENSE
 Copyright 2012-2103 Eduworks Corporation
 This file is part of the Reusable Support System for ELearning Library (RUSSEL Library).
